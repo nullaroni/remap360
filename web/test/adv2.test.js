@@ -1,8 +1,8 @@
 // Run with: node --test web/test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const T = require("../js/tokens.js");
-const { LayoutFile, parseLine } = require("../js/layoutfile.js");
+const T = require("../js/smartset/adv2-tokens.js");
+const { LayoutFile, parseLine } = require("../js/smartset/adv2-file.js");
 
 test("every layer has 86 positions with unique tokens", () => {
   for (const family of ["qwerty", "dvorak"]) {

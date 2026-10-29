@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Remap360 for Advantage2</title>
-  <meta name="description" content="A visual layout editor for the Kinesis Advantage2 that runs in your browser.">
+  <title>Remap360</title>
+  <meta name="description" content="A visual keymap editor for Kinesis Advantage360 Pro, Advantage360 and Advantage2 keyboards, in your browser.">
   <link rel="icon" href="assets/logo-mark.png">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -13,165 +13,297 @@
     <div class="brand">
       <img src="assets/logo-mark.png" alt="" width="28" height="28">
       <span class="brand-name">Remap360</span>
-      <span class="brand-model">for Advantage2</span>
     </div>
+    <label class="model-pick">
+      <span class="sr-only">Keyboard</span>
+      <select id="model-select" aria-label="Keyboard model">
+        <option value="auto">Detect my keyboard</option>
+        <option value="adv360pro">Advantage360 Pro (ZMK)</option>
+        <option value="adv360">Advantage360 (SmartSet)</option>
+        <option value="adv2">Advantage2</option>
+      </select>
+    </label>
     <div class="actions">
-      <button id="btn-open-drive" class="primary" title="Pick the v-Drive's “active” folder (Chrome, Edge)">Open v-Drive…</button>
-      <button id="btn-open-file" title="Open a layout .txt file">Open File…</button>
-      <input id="file-input" type="file" accept=".txt,text/plain" hidden>
-      <button id="btn-save" class="primary" disabled title="Save back to the v-Drive (⌘S / Ctrl+S)">Save</button>
-      <button id="btn-copy" title="Copy the layout file text">Copy</button>
-      <button id="btn-download" title="Download the layout file">Download</button>
-      <span class="sep"></span>
-      <button id="btn-undo" title="Undo (⌘Z / Ctrl+Z)" disabled>Undo</button>
-      <button id="btn-redo" title="Redo (⇧⌘Z / Ctrl+Y)" disabled>Redo</button>
-      <span class="sep"></span>
-      <button id="btn-help" title="How to open the v-Drive">Help</button>
+      <span class="legend-toggle segmented" aria-label="Key legends">
+        <button data-os="mac">Mac</button>
+        <button data-os="win">Windows</button>
+      </span>
+      <button id="btn-help">Help</button>
     </div>
   </header>
 
-  <section class="toolbar">
-    <div class="file-info">
-      <select id="file-select" hidden title="Layout files on the v-Drive"></select>
-      <span id="file-name" class="file-name">New layout (not saved)</span>
-      <span id="dirty" class="dirty" hidden>● Edited</span>
+  <!-- Start: pick or detect a keyboard -->
+  <main id="view-start" class="start">
+    <h1>Which keyboard do you have?</h1>
+    <p class="muted" id="detect-status">Connect it and Remap360 will recognize it, or pick it below.</p>
+    <div class="cards">
+      <article class="choice">
+        <h2>Advantage360 Pro</h2>
+        <p>Wireless split keyboard with ZMK firmware. Changes are live over USB.</p>
+        <button class="primary" data-connect="adv360pro">Connect keyboard…</button>
+        <button class="link" data-demo="adv360pro">Try a demo</button>
+      </article>
+      <article class="choice">
+        <h2>Advantage360</h2>
+        <p>Wired split keyboard with the SmartSet engine. Edits its v-Drive layout files.</p>
+        <button class="primary" data-drive>Open v-Drive…</button>
+        <button class="link" data-demo="adv360">Open the editor</button>
+      </article>
+      <article class="choice">
+        <h2>Advantage2</h2>
+        <p>One-piece contoured keyboard with SmartSet. Edits its v-Drive layout files.</p>
+        <button class="primary" data-drive>Open v-Drive…</button>
+        <button class="link" data-demo="adv2">Open the editor</button>
+      </article>
     </div>
-    <div class="segmented" role="tablist" aria-label="Layer">
-      <button data-layer="top" class="on" role="tab">Top layer</button>
-      <button data-layer="keypad" role="tab">Keypad layer</button>
+    <p class="muted small">Pro keyboards are detected over USB (Chrome, Edge). Advantage360 and Advantage2 are recognized from the files on the v-Drive you open. Nothing is uploaded: everything runs in this page.</p>
+  </main>
+
+  <!-- Advantage360 Pro: live editing -->
+  <section id="view-zmk" hidden>
+    <section class="toolbar">
+      <div class="file-info">
+        <span id="z-device" class="file-name">Advantage360 Pro</span>
+        <span id="z-status" class="pill">Not connected</span>
+      </div>
+      <button id="z-connect" class="primary">Connect keyboard…</button>
+      <button id="z-disconnect" hidden>Disconnect</button>
+      <button id="z-revert" disabled>Revert</button>
+      <button id="z-keep" class="primary" disabled>Keep Changes</button>
+    </section>
+
+    <div id="z-connect-panel" class="panel-msg">
+      <h2>Connect your Advantage360 Pro</h2>
+      <p>Plug the <b>left half</b> into this computer with a USB data cable, then choose it from the list.</p>
+      <p id="z-serial-missing" class="warn-text" hidden>This browser can't talk to USB serial devices. Use Chrome, Edge or another Chromium browser, or the Remap360 Mac app.</p>
+      <div class="row center">
+        <button id="z-connect-big" class="primary">Connect keyboard…</button>
+        <button id="z-demo">Try the demo</button>
+      </div>
     </div>
-    <div class="segmented" aria-label="Layout family">
-      <button data-family="qwerty" class="on">QWERTY</button>
-      <button data-family="dvorak">Dvorak</button>
+    <div id="z-locked-panel" class="panel-msg" hidden>
+      <h2>Unlock editing on the keyboard</h2>
+      <p>On the keyboard, <b>hold Mod and press Esc</b> (on the stock layout). This page continues by itself.</p>
+      <button id="z-sim-unlock" hidden>Pretend I pressed Mod + Esc</button>
     </div>
-    <div class="segmented" aria-label="Key legends">
-      <button data-os="mac">Mac legends</button>
-      <button data-os="win">Windows legends</button>
+    <div id="z-loading-panel" class="panel-msg" hidden><h2>Reading the keymap…</h2></div>
+
+    <div id="z-workspace" hidden>
+      <section class="toolbar sub">
+        <div class="segmented" id="z-layers" aria-label="Layers"></div>
+        <button id="z-add-layer" title="Add a layer">+ Layer</button>
+        <button id="z-rename-layer">Rename</button>
+        <button id="z-remove-layer">Remove</button>
+      </section>
+      <main class="workspace">
+        <section class="board-card">
+          <svg id="z-board" class="board" role="group" aria-label="Advantage360 Pro keyboard"></svg>
+          <div class="legend">
+            <span><i class="sw layer"></i>Layer</span>
+            <span><i class="sw taphold"></i>Hold-tap</span>
+            <span><i class="sw system"></i>Device</span>
+            <span><i class="sw macro"></i>Macro</span>
+            <span class="hint">Click a key to change it · drag a key onto another to swap them</span>
+          </div>
+        </section>
+        <aside class="inspector">
+          <div id="z-inspector-empty">
+            <h2>Pick a key</h2>
+            <p>Click any key to change what it does. Changes are live on the keyboard right away. Try them, then <b>Keep Changes</b> or <b>Revert</b>.</p>
+            <p>Double-click a layer to rename it.</p>
+          </div>
+          <div id="z-inspector-key" class="insp" hidden>
+            <div class="key-head">
+              <div class="cap" id="z-key-cap"></div>
+              <div>
+                <h2 id="z-key-title"></h2>
+                <p id="z-key-desc" class="muted"></p>
+                <code id="z-key-code" class="muted small"></code>
+              </div>
+            </div>
+            <div class="segmented tabs">
+              <button data-z-tab="key" class="on">Key</button>
+              <button data-z-tab="layer">Layer</button>
+              <button data-z-tab="holdtap">Hold-tap</button>
+              <button data-z-tab="more">More</button>
+            </div>
+            <div class="tab" data-z-panel="key">
+              <div class="row" id="z-mods" aria-label="Modifiers">
+                <button data-mod="LC" title="Control">⌃</button>
+                <button data-mod="LA" title="Option / Alt">⌥</button>
+                <button data-mod="LS" title="Shift">⇧</button>
+                <button data-mod="LG" title="Command / Windows">⌘</button>
+                <button id="z-capture">Press a key…</button>
+              </div>
+              <div class="row">
+                <button id="z-trans" title="Use the key from the layer below">Transparent</button>
+                <button id="z-none">Nothing</button>
+              </div>
+              <input id="z-picker-search" type="search" placeholder="Search keys (e.g. volume, spotlight, f13)">
+              <div id="z-picker-cats" class="chips"></div>
+              <div id="z-picker" class="picker"></div>
+            </div>
+            <div class="tab" data-z-panel="layer" hidden>
+              <label>Action <select id="z-layer-kind"></select></label>
+              <label>Layer <select id="z-layer-target"></select></label>
+              <label id="z-layer-tap-row">Key when tapped <select id="z-layer-tap"></select></label>
+              <button id="z-layer-apply" class="primary">Apply</button>
+            </div>
+            <div class="tab" data-z-panel="holdtap" hidden>
+              <p class="note">Hold for a modifier, tap for a key. Handy for home-row mods or Caps Lock as Esc/Ctrl.</p>
+              <label>When held <select id="z-ht-hold"></select></label>
+              <label>When tapped <select id="z-ht-tap"></select></label>
+              <button id="z-ht-apply" class="primary">Apply</button>
+            </div>
+            <div class="tab" data-z-panel="more" hidden>
+              <div id="z-more" class="presets"></div>
+            </div>
+            <button id="z-deselect" class="link">← Done</button>
+          </div>
+        </aside>
+      </main>
     </div>
   </section>
 
-  <main class="workspace">
-    <section class="board-card">
-      <svg id="board" role="group" aria-label="Advantage2 keyboard"></svg>
-      <div class="legend">
-        <span><i class="sw remapped"></i>Remapped</span>
-        <span><i class="sw taphold"></i>Tap &amp; hold</span>
-        <span><i class="sw macro"></i>Macro</span>
-        <span><i class="sw disabled"></i>Disabled</span>
-        <span class="hint">Click a key to change it · drag a key onto another to swap them</span>
+  <!-- Advantage360 / Advantage2: SmartSet layout files -->
+  <section id="view-smartset" hidden>
+    <section class="toolbar">
+      <div class="file-info">
+        <select id="ss-file-select" hidden title="Layout files on the v-Drive"></select>
+        <span id="ss-file-name" class="file-name"></span>
+        <span id="ss-dirty" class="dirty" hidden>● Edited</span>
       </div>
+      <button id="ss-open-drive" class="primary">Open v-Drive…</button>
+      <button id="ss-open-file">Open File…</button>
+      <button id="ss-save" class="primary" title="⌘S / Ctrl+S">Save</button>
+      <button id="ss-copy">Copy</button>
+      <button id="ss-download">Download</button>
+      <button id="ss-undo" title="⌘Z / Ctrl+Z">Undo</button>
+      <button id="ss-redo" title="⇧⌘Z / Ctrl+Y">Redo</button>
+    </section>
+    <section class="toolbar sub">
+      <div class="segmented" id="ss-layers" aria-label="Layer"></div>
+      <div class="segmented" id="ss-families" aria-label="Layout family"></div>
     </section>
 
-    <aside class="inspector" id="inspector">
-      <div class="empty" id="inspector-empty">
-        <h2>Pick a key</h2>
-        <p>Click any key on the keyboard to remap it, give it a tap &amp; hold action or a macro.</p>
-        <h3>Presets</h3>
-        <div class="presets">
-          <button data-preset="mac">Mac thumb keys (⌘ ⌥ ⌃ ⌘)</button>
-          <button data-preset="caps-ctrl">Caps Lock → Ctrl</button>
-          <button data-preset="caps-esc">Caps Lock: tap Esc, hold Ctrl</button>
-          <button data-preset="no-caps">Disable Caps Lock</button>
+    <main class="workspace">
+      <section class="board-card">
+        <svg id="ss-board" class="board" role="group" aria-label="Keyboard"></svg>
+        <div class="legend">
+          <span><i class="sw remapped"></i>Remapped</span>
+          <span><i class="sw taphold"></i>Tap &amp; hold</span>
+          <span><i class="sw macro"></i>Macro</span>
+          <span><i class="sw disabled"></i>Disabled</span>
+          <span class="hint">Click a key to change it · drag a key onto another to swap them</span>
         </div>
+      </section>
+
+      <aside class="inspector">
+        <div id="ss-inspector-empty">
+          <h2>Pick a key</h2>
+          <p>Click any key on the keyboard to remap it, give it a tap &amp; hold action or a macro.</p>
+          <p id="ss-layer-note" class="note" hidden></p>
+          <h3>Presets</h3>
+          <div class="presets" id="ss-presets"></div>
+        </div>
+
+        <div id="ss-inspector-key" class="insp" hidden>
+          <div class="key-head">
+            <div class="cap" id="ss-key-cap"></div>
+            <div>
+              <h2 id="ss-key-title"></h2>
+              <code id="ss-key-token" class="muted small"></code>
+            </div>
+          </div>
+          <div class="segmented tabs">
+            <button data-ss-tab="remap" class="on">Key</button>
+            <button data-ss-tab="taphold">Tap &amp; Hold</button>
+            <button data-ss-tab="macro">Macro</button>
+          </div>
+          <div class="tab" data-ss-panel="remap">
+            <div class="row">
+              <button id="ss-capture" title="Press a key on any keyboard to pick it">Press a key…</button>
+              <button id="ss-disable">Disable</button>
+              <button id="ss-reset">Reset to default</button>
+            </div>
+            <input id="ss-picker-search" type="search" placeholder="Search actions (e.g. volume, cmd, f13)">
+            <div id="ss-picker-cats" class="chips"></div>
+            <div id="ss-picker" class="picker"></div>
+          </div>
+          <div class="tab" data-ss-panel="taphold" hidden>
+            <p class="note">Tap the key for one action, hold it for another. Not recommended for typing keys.</p>
+            <label>On tap <select id="ss-th-tap"></select></label>
+            <label>On hold <select id="ss-th-hold"></select></label>
+            <label>Hold after <input id="ss-th-delay" type="number" min="1" max="999" value="250"> ms</label>
+            <div class="row">
+              <button id="ss-th-apply" class="primary">Apply</button>
+              <button id="ss-th-clear">Remove</button>
+            </div>
+          </div>
+          <div class="tab" data-ss-panel="macro" hidden>
+            <p class="note" id="ss-macro-note"></p>
+            <fieldset class="mods" id="ss-macro-mods"><legend>Hold with</legend></fieldset>
+            <label>Type the text to play
+              <textarea id="ss-macro-text" rows="3" placeholder="Hello, world!"></textarea>
+            </label>
+            <label>Or edit the tokens
+              <textarea id="ss-macro-tokens" class="mono" rows="3" spellcheck="false" placeholder="{h}{e}{l}{l}{o}"></textarea>
+            </label>
+            <div class="note" id="ss-macro-help"></div>
+            <div class="row">
+              <button id="ss-macro-apply" class="primary">Save macro</button>
+              <button id="ss-macro-clear">Remove</button>
+            </div>
+            <ul id="ss-macro-list" class="macro-list"></ul>
+          </div>
+          <button id="ss-deselect" class="link">← Back to presets</button>
+        </div>
+      </aside>
+    </main>
+
+    <section class="bottom single">
+      <div class="card">
+        <div class="card-head">
+          <h3>Layout file</h3>
+          <span id="ss-stats" class="muted"></span>
+        </div>
+        <textarea id="ss-source" class="mono" spellcheck="false" aria-label="Layout file text" placeholder="No changes yet: the keyboard uses its default layout. Your remaps and macros appear here, one per line."></textarea>
+        <ul id="ss-problems" class="problems"></ul>
       </div>
+    </section>
+  </section>
 
-      <div id="inspector-key" hidden>
-        <div class="key-head">
-          <div class="cap" id="key-cap"></div>
-          <div>
-            <h2 id="key-title"></h2>
-            <code id="key-token"></code>
-          </div>
-        </div>
-
-        <div class="segmented tabs">
-          <button data-tab="remap" class="on">Key</button>
-          <button data-tab="taphold">Tap &amp; Hold</button>
-          <button data-tab="macro">Macro</button>
-        </div>
-
-        <div class="tab" data-panel="remap">
-          <div class="row">
-            <button id="btn-capture" title="Press a key on any keyboard to pick it">Press a key…</button>
-            <button id="btn-disable">Disable</button>
-            <button id="btn-reset">Reset to default</button>
-          </div>
-          <input id="picker-search" type="search" placeholder="Search actions (e.g. volume, cmd, f13)">
-          <div id="picker-cats" class="chips"></div>
-          <div id="picker" class="picker"></div>
-        </div>
-
-        <div class="tab" data-panel="taphold" hidden>
-          <p class="note">Tap the key for one action, hold it for another. Not recommended for typing keys.</p>
-          <label>On tap <select id="th-tap"></select></label>
-          <label>On hold <select id="th-hold"></select></label>
-          <label>Hold after <input id="th-delay" type="number" min="1" max="999" value="250"> ms</label>
-          <div class="row">
-            <button id="th-apply" class="primary">Apply</button>
-            <button id="th-clear">Remove</button>
-          </div>
-        </div>
-
-        <div class="tab" data-panel="macro" hidden>
-          <p class="note">Macros play when the trigger is pressed. Modifier keys can only trigger a macro together with another key.</p>
-          <fieldset class="mods" id="macro-mods"><legend>Hold with</legend></fieldset>
-          <label>Type the text to play
-            <textarea id="macro-text" rows="3" placeholder="Hello, world!"></textarea>
-          </label>
-          <label>Or edit the tokens
-            <textarea id="macro-tokens" rows="3" spellcheck="false" placeholder="{h}{e}{l}{l}{o}"></textarea>
-          </label>
-          <div class="note">Extra tokens: <code>{d125}</code> <code>{d500}</code> delays, <code>{speed1}</code>–<code>{speed9}</code>, <code>{-lshift}</code>/<code>{+lshift}</code> to hold/release.</div>
-          <div class="row">
-            <button id="macro-apply" class="primary">Save macro</button>
-            <button id="macro-clear">Remove</button>
-          </div>
-          <ul id="macro-list" class="macro-list"></ul>
-        </div>
-        <button id="btn-deselect" class="link">← Back to presets</button>
-      </div>
-    </aside>
-  </main>
-
-  <section class="bottom">
-    <div class="card">
-      <div class="card-head">
-        <h3>Layout file</h3>
-        <span id="stats" class="muted"></span>
-      </div>
-      <textarea id="source" spellcheck="false" aria-label="Layout file text" placeholder="No changes yet: the keyboard uses its default layout. Your remaps and macros appear here, one per line."></textarea>
-      <ul id="problems" class="problems"></ul>
-    </div>
+  <section class="bottom single" id="testpad-section" hidden>
     <div class="card">
       <div class="card-head">
         <h3>Test pad</h3>
-        <span class="muted">Type here to see what your computer receives</span>
+        <span class="muted">Click here and type to see what your computer receives</span>
       </div>
       <div id="testpad" class="testpad" tabindex="0">Click here, then press keys…</div>
     </div>
   </section>
 
   <dialog id="help">
-    <h2>Editing your Advantage2 in the browser</h2>
-    <ol>
-      <li>Turn on Power User Mode: hold <kbd>progm</kbd> + <kbd>Shift</kbd> and tap <kbd>Esc</kbd>. The LEDs flash four times.</li>
-      <li>Open the v-Drive: hold <kbd>progm</kbd> and tap <kbd>F1</kbd>. A drive called <b>ADVANTAGE2</b> appears after a few seconds.</li>
-      <li>Click <b>Open v-Drive…</b> and choose the drive (or its <b>active</b> folder). Allow editing when the browser asks.</li>
-      <li>Change keys, then click <b>Save</b>.</li>
-      <li><b>Eject</b> the drive in Finder or Explorer, then press <kbd>progm</kbd> + <kbd>F1</kbd> to close it. Changes take effect when the v-Drive closes. You can also reload the layout with <kbd>progm</kbd> + <kbd>F3</kbd> (QWERTY) or <kbd>F4</kbd> (Dvorak).</li>
-    </ol>
-    <p><b>Browsers:</b> saving straight to the drive needs Chrome, Edge or another Chromium browser. In Safari and Firefox, use <b>Open File…</b>, then <b>Copy</b> and paste the text into the file on the v-Drive with TextEdit or Notepad.</p>
-    <p><b>Older keyboards with a 2&nbsp;MB v-Drive:</b> Kinesis recommends pasting new contents into the existing file instead of replacing it. Use <b>Copy</b> and paste into the open file to be safe.</p>
-    <p><b>Before you start:</b> your original file is backed up in this browser before every save, and you can download it from the Backups list below.</p>
-    <h3>Backups</h3>
+    <div id="help-body"></div>
     <ul id="backup-list" class="backup-list"></ul>
     <form method="dialog"><button class="primary">Close</button></form>
   </dialog>
 
   <div id="toast" class="toast" hidden></div>
 
-  <script src="js/tokens.js"></script>
-  <script src="js/layoutfile.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/shared/board.js"></script>
+  <script src="js/shared/geometry360.js"></script>
+  <script src="js/smartset/adv2-tokens.js"></script>
+  <script src="js/smartset/adv2-file.js"></script>
+  <script src="js/smartset/adv2-model.js"></script>
+  <script src="js/smartset/adv360-model.js"></script>
+  <script src="js/zmk/studio.js"></script>
+  <script src="js/zmk/hid.js"></script>
+  <script src="js/zmk/keymap.js"></script>
+  <script src="js/zmk/sim.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/smartset/editor.js"></script>
+  <script src="js/zmk/editor.js"></script>
+  <script>App.start();</script>
 </body>
 </html>

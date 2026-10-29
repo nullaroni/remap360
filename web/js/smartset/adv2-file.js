@@ -3,7 +3,7 @@
 (function (root) {
   "use strict";
 
-  const T = root.A2Tokens || (typeof require !== "undefined" ? require("./tokens.js") : null);
+  const T = root.A2Tokens || (typeof require !== "undefined" ? require("./adv2-tokens.js") : null);
 
   const TAP_HOLD = /^\[([^\]]+)\]>\[([^\]]+)\]\[t&h(\d{1,3})\]\[([^\]]+)\]$/i;
   const REMAP = /^\[([^\]]+)\]>\[([^\]]+)\]$/;

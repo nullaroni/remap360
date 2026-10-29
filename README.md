@@ -2,7 +2,7 @@
 
 <p align="center"><b>A visual keymap editor for the Kinesis Advantage360 Pro, made for the Mac.</b><br>
 Plug in, click a key, change it, and it's live on your keyboard instantly.<br>
-<b>New:</b> a browser editor for the <a href="#advantage2-in-the-browser">Kinesis Advantage2</a>.</p>
+<b>New:</b> a <a href="#remap360-in-the-browser">browser version</a> for the Advantage360 Pro, Advantage360 and Advantage2.</p>
 
 <p align="center"><img src="docs/screenshots/demo.gif" alt="Changing Esc to Mission Control live on the keyboard, then reverting" width="900"></p>
 
@@ -50,24 +50,30 @@ Building needs Xcode 16 or newer.
 3. Click a key, choose what it should do, and type to try it.
 4. Click **Keep Changes** to store it on the keyboard. It stays there through restarts and works over Bluetooth, without Remap360 running.
 
-## Advantage2 in the browser
+## Remap360 in the browser
 
-The `web/` folder has a separate editor for the **Kinesis Advantage2** (SmartSet firmware). It runs in your browser, with nothing to install and on any OS. The Advantage2 has no live-editing protocol. Instead it keeps each layout as a text file (`qwerty.txt`, `dvorak.txt`, hotkey layouts) on a USB drive built into the keyboard, the v-Drive. The editor reads and writes those files for you.
+The `web/` folder holds a browser version of Remap360 that works with three Kinesis keyboards, with nothing to install. Pick your keyboard from the menu at the top, or connect it and let the page recognize it:
 
-- Click keys to remap them, drag one key onto another to swap them, and use the Keypad layer as well as the Top layer.
-- Tap & hold actions, text macros (including modifier-combo triggers, delays and speeds), disabling keys, mouse buttons, media keys, Hyper/Meh.
-- QWERTY and Dvorak location maps, Mac or Windows legends, and presets (Mac thumb keys, Caps Lock → Ctrl, Caps tap Esc/hold Ctrl).
-- Edit the raw layout file side by side, with line-by-line error checking. Unknown lines are kept as they are.
-- Your original file is backed up in the browser before each save. Undo/redo and a Test Pad are included.
+| Keyboard | How it's detected | How editing works |
+| --- | --- | --- |
+| **Advantage360 Pro** (ZMK) | Answers ZMK Studio over USB (Web Serial). Keyboards you've allowed before reconnect by themselves. | Live, like the Mac app: changes are on the keyboard immediately, then **Keep Changes** or **Revert**. Layers can be added, renamed and removed. |
+| **Advantage360** (SmartSet, wired) | The `ADV360` v-Drive has a `layouts` folder (`layout1.txt`–`layout9.txt`). | Edits the profile's layout file: Base, Keypad, Fn, Fn2 and Fn3 layers. |
+| **Advantage2** | The `ADVANTAGE2` v-Drive has an `active` folder (`qwerty.txt`, `dvorak.txt`). | Edits the layout file: Top and Keypad layers, QWERTY or Dvorak. |
 
-**Use it:** open `web/index.html` in a browser, or the GitHub Pages copy once it's deployed (`.github/workflows/pages.yml` publishes `web/` on every push to `main`).
+Common to all three:
+- Click a key to change it, or drag one key onto another to swap them. **Press a key…** picks the key by pressing it.
+- Mac or Windows legends, and a Test Pad that highlights the key you press.
 
-1. Turn on Power User Mode: hold **progm + Shift** and tap **Esc**.
-2. Open the v-Drive: hold **progm** and tap **F1**.
-3. Click **Open v-Drive…** and pick the `ADVANTAGE2` drive (Chrome, Edge or another Chromium browser). In Safari or Firefox, use **Open File…**, then **Copy** and paste the text into the file on the drive.
-4. Edit, **Save**, eject the drive, and press **progm + F1** to close it. The keyboard loads the new layout.
+The Advantage360 and Advantage2 editors also have:
+- Tap & hold actions, text macros (including modifier-combo triggers), disabling keys, and presets.
+- The raw layout file side by side, with line-by-line error checking. Lines the editor doesn't understand are kept as they are.
+- Undo/redo, and a backup in the browser every time a file is opened or saved.
 
-Development: it's plain HTML/CSS/JS with no build step. Run the parser tests with `node --test web/test`.
+**Browsers:** connecting an Advantage360 Pro, and saving straight to a v-Drive, need Chrome, Edge or another Chromium browser. In Safari and Firefox you can still open a layout file, then copy or download the result. There's a demo Advantage360 Pro (`?demo=adv360pro`) for trying the live editor without a keyboard.
+
+**Use it:** open `web/index.html`, or the GitHub Pages copy once deployed (`.github/workflows/pages.yml` tests and publishes `web/` on every push to `main`). The Help button explains how to open the v-Drive or unlock the keyboard for each model.
+
+Development: it's plain HTML/CSS/JS with no build step. Run the tests with `node --test web/test`. They cover the Studio protocol (matching the Swift tests), a simulated Advantage360 Pro, and both SmartSet file formats.
 
 ## FAQ
 
@@ -94,6 +100,7 @@ The core library (`Sources/Remap360Core`) holds the keymap parser, the ZMK Studi
 - Built on [ZMK Firmware](https://zmk.dev) and its Studio RPC protocol.
 - Layout data and the test fixture keymap come from Kinesis' MIT-licensed [Adv360-Pro-ZMK](https://github.com/KinesisCorporation/Adv360-Pro-ZMK) config.
 - Advantage2 token names follow the [Advantage2 User's Manual](https://kinesis-ergo.com/support/advantage2/), cross-checked against the MIT-licensed [kijowski/kinesis](https://github.com/kijowski/kinesis) remap visualizer.
+- Advantage360 (SmartSet) tokens follow Kinesis' [Direct Programming Guide](https://kinesis-ergo.com/wp-content/uploads/Advantage360-SmartSet-Direct-Programming-Guide-v2-11-22.pdf) and [action token list](https://kinesis-ergo.com/wp-content/uploads/Adv360-SmartSet-Direct-Programming-Action-Tokens-v3-31-23.pdf).
 
 Remap360 is not affiliated with or endorsed by Kinesis Corporation. Advantage360 and Advantage2 are trademarks of Kinesis Corporation.
 
